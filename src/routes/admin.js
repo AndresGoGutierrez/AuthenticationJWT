@@ -4,7 +4,7 @@ const User = require("../models/User")
 const Role = require("../models/Role")
 const { verifyToken, isAdmin } = require("../middlewares/authJWT")
 
-// Middleware para depuración
+// Debug middleware
 router.use((req, res, next) => {
   console.log("Admin API Request:", {
     method: req.method,
@@ -18,13 +18,13 @@ router.use((req, res, next) => {
   next()
 })
 
-// Obtener todos los usuarios (solo admin)
+// Get all users (admin only)
 router.get("/users", [verifyToken, isAdmin], async (req, res) => {
   try {
-    console.log("Obteniendo todos los usuarios")
+    console.log("Fetching all users")
     const users = await User.find({}, { password: 0 }).populate("roles")
 
-    // Transformar los datos para el cliente
+    // Transform data for client
     const transformedUsers = users.map((user) => ({
       id: user._id,
       username: user.username,
@@ -33,24 +33,24 @@ router.get("/users", [verifyToken, isAdmin], async (req, res) => {
       createdAt: user.createdAt,
     }))
 
-    console.log(`Encontrados ${transformedUsers.length} usuarios`)
+    console.log(`Found ${transformedUsers.length} users`)
     res.json(transformedUsers)
   } catch (error) {
-    console.error("Error al obtener usuarios:", error)
-    res.status(500).json({ message: "Error al obtener usuarios" })
+    console.error("Error fetching users:", error)
+    res.status(500).json({ message: "Error fetching users" })
   }
 })
 
-// Obtener un usuario específico (solo admin)
+// Get specific user (admin only)
 router.get("/users/:id", [verifyToken, isAdmin], async (req, res) => {
   try {
     const user = await User.findById(req.params.id, { password: 0 }).populate("roles")
 
     if (!user) {
-      return res.status(404).json({ message: "Usuario no encontrado" })
+      return res.status(404).json({ message: "User not found" })
     }
 
-    // Transformar los datos para el cliente
+    // Transform data for client
     const transformedUser = {
       id: user._id,
       username: user.username,
@@ -61,11 +61,11 @@ router.get("/users/:id", [verifyToken, isAdmin], async (req, res) => {
 
     res.json(transformedUser)
   } catch (error) {
-    res.status(500).json({ message: "Error al obtener usuario" })
+    res.status(500).json({ message: "Error fetching user" })
   }
 })
 
-// Actualizar un usuario (solo admin)
+// Update user (admin only)
 router.put("/users/:id", [verifyToken, isAdmin], async (req, res) => {
   try {
     const { username, email } = req.body
@@ -77,10 +77,10 @@ router.put("/users/:id", [verifyToken, isAdmin], async (req, res) => {
     ).populate("roles")
 
     if (!updatedUser) {
-      return res.status(404).json({ message: "Usuario no encontrado" })
+      return res.status(404).json({ message: "User not found" })
     }
 
-    // Transformar los datos para el cliente
+    // Transform data for client
     const transformedUser = {
       id: updatedUser._id,
       username: updatedUser.username,
@@ -91,24 +91,24 @@ router.put("/users/:id", [verifyToken, isAdmin], async (req, res) => {
 
     res.json(transformedUser)
   } catch (error) {
-    res.status(500).json({ message: "Error al actualizar usuario" })
+    res.status(500).json({ message: "Error updating user" })
   }
 })
 
-// Cambiar rol de usuario (solo admin)
+// Change user role (admin only)
 router.patch("/users/:id/role", [verifyToken, isAdmin], async (req, res) => {
   try {
     const { roles } = req.body
 
     if (!roles || !Array.isArray(roles)) {
-      return res.status(400).json({ message: "Se requiere un array de roles" })
+      return res.status(400).json({ message: "An array of roles is required" })
     }
 
-    // Obtener los IDs de los roles
+    // Get role IDs
     const foundRoles = await Role.find({ name: { $in: roles } })
 
     if (foundRoles.length === 0) {
-      return res.status(400).json({ message: "Roles no válidos" })
+      return res.status(400).json({ message: "Invalid roles" })
     }
 
     const roleIds = foundRoles.map((role) => role._id)
@@ -120,10 +120,10 @@ router.patch("/users/:id/role", [verifyToken, isAdmin], async (req, res) => {
     ).populate("roles")
 
     if (!updatedUser) {
-      return res.status(404).json({ message: "Usuario no encontrado" })
+      return res.status(404).json({ message: "User not found" })
     }
 
-    // Transformar los datos para el cliente
+    // Transform data for client
     const transformedUser = {
       id: updatedUser._id,
       username: updatedUser.username,
@@ -134,22 +134,22 @@ router.patch("/users/:id/role", [verifyToken, isAdmin], async (req, res) => {
 
     res.json(transformedUser)
   } catch (error) {
-    res.status(500).json({ message: "Error al cambiar rol de usuario" })
+    res.status(500).json({ message: "Error changing user role" })
   }
 })
 
-// Eliminar un usuario (solo admin)
+// Delete user (admin only)
 router.delete("/users/:id", [verifyToken, isAdmin], async (req, res) => {
   try {
     const deletedUser = await User.findByIdAndDelete(req.params.id)
 
     if (!deletedUser) {
-      return res.status(404).json({ message: "Usuario no encontrado" })
+      return res.status(404).json({ message: "User not found" })
     }
 
-    res.json({ message: "Usuario eliminado correctamente" })
+    res.json({ message: "User successfully deleted" })
   } catch (error) {
-    res.status(500).json({ message: "Error al eliminar usuario" })
+    res.status(500).json({ message: "Error deleting user" })
   }
 })
 

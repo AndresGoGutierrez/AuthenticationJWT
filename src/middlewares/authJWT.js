@@ -4,7 +4,7 @@ import User from "../models/User"
 
 export const verifyToken = async (req, res, next) => {
   try {
-    // Obtener el token de los headers
+    // Get the token from the headers
     const token =
       req.headers["x-access-token"] || (req.headers.authorization && req.headers.authorization.split(" ")[1])
 
@@ -13,102 +13,102 @@ export const verifyToken = async (req, res, next) => {
       return res.status(403).json({ message: "No token provided" })
     }
 
-    console.log("Verificando token...")
+    console.log("Verifying token...")
 
-    // Verificar el token
+    // Verify the token
     const decoded = jwt.verify(token, config.SECRET)
     req.userId = decoded.id
 
-    // Buscar el usuario
+    // Find the user by ID and exclude the password
     const user = await User.findById(req.userId, { password: 0 }).populate("roles")
 
     if (!user) {
-      console.log("Usuario no encontrado")
-      return res.status(404).json({ message: "Usuario no encontrado" })
+      console.log("User not found")
+      return res.status(404).json({ message: "User not found" })
     }
 
-    console.log(`Usuario encontrado: ${user.username}`)
+    console.log(`User found: ${user.username}`)
 
-    // Guardar el usuario en req para uso posterior
+    // Save the user in req for later use
     req.user = user
 
     next()
   } catch (error) {
-    console.error("Error en verifyToken:", error)
+    console.error("Error in verifyToken:", error)
     return res.status(401).json({ message: "Unauthorized" })
   }
 }
 
 export const isModerator = async (req, res, next) => {
   try {
-    // El usuario ya debe estar en req.user desde verifyToken
+    // The user should already be in req.user from verifyToken
     if (!req.user) {
-      console.log("Usuario no encontrado en req.user")
+      console.log("User not found in req.user")
 
-      // Intentar obtener el usuario si no está en req.user
+      // Try to get the user if not in req.user
       if (req.userId) {
         const user = await User.findById(req.userId, { password: 0 }).populate("roles")
         if (!user) {
-          return res.status(404).json({ message: "Usuario no encontrado" })
+          return res.status(404).json({ message: "User not found" })
         }
         req.user = user
       } else {
-        return res.status(500).json({ message: "Error interno del servidor" })
+        return res.status(500).json({ message: "Internal server error" })
       }
     }
 
-    // Verificar si el usuario tiene rol de moderador
+    // Check if the user has the moderator role
     const roles = req.user.roles
     const isModerator = roles.some((role) => role.name === "moderator")
 
     if (isModerator) {
-      console.log("Usuario es moderador")
+      console.log("User is a moderator")
       next()
       return
     }
 
-    console.log("Usuario no es moderador")
+    console.log("User is not a moderator")
     return res.status(403).json({ message: "Require Moderator role" })
   } catch (error) {
-    console.error("Error en isModerator:", error)
-    return res.status(500).json({ message: "Error al verificar rol de moderador" })
+    console.error("Error in isModerator:", error)
+    return res.status(500).json({ message: "Error checking moderator role" })
   }
 }
 
 export const isAdmin = async (req, res, next) => {
   try {
-    // El usuario ya debe estar en req.user desde verifyToken
+    // The user should already be in req.user from verifyToken
     if (!req.user) {
-      console.log("Usuario no encontrado en req.user")
+      console.log("User not found in req.user")
 
-      // Intentar obtener el usuario si no está en req.user
+      // Try to get the user if not in req.user
       if (req.userId) {
         const user = await User.findById(req.userId, { password: 0 }).populate("roles")
         if (!user) {
-          return res.status(404).json({ message: "Usuario no encontrado" })
+          return res.status(404).json({ message: "User not found" })
         }
         req.user = user
       } else {
-        return res.status(500).json({ message: "Error interno del servidor" })
+        return res.status(500).json({ message: "Internal server error" })
       }
     }
 
-    // Verificar si el usuario tiene rol de administrador
+    // Check if the user has the admin role
     const roles = req.user.roles
-    console.log("Roles del usuario:", roles)
+    console.log("User roles:", roles)
 
     const isAdmin = roles.some((role) => role.name === "admin")
 
     if (isAdmin) {
-      console.log("Usuario es administrador")
+      console.log("User is an admin")
       next()
       return
     }
 
-    console.log("Usuario no es administrador")
+    console.log("User is not an admin")
     return res.status(403).json({ message: "Require Admin role" })
   } catch (error) {
-    console.error("Error en isAdmin:", error)
-    return res.status(500).json({ message: "Error al verificar rol de administrador" })
+    console.error("Error in isAdmin:", error)
+    return res.status(500).json({ message: "Error checking admin role" })
   }
 }

@@ -4,29 +4,29 @@ const router = Router()
 import * as userCtrl from "../controllers/user.controller"
 import { authJwt, verifySignup } from "../middlewares"
 
-// Crear un nuevo usuario (solo administradores)
+// Create a new user (admin only)
 router.post("/", [authJwt.verifyToken, authJwt.isAdmin, verifySignup.checkRolesExisted], userCtrl.createUser)
 
-// Obtener todos los usuarios (solo administradores)
+// Get all users (admin only)
 router.get(
   "/",
   [
-    authJwt.verifyToken, // sólo usuarios autenticados
-    authJwt.isAdmin, // sólo administradores
+    authJwt.verifyToken, // only authenticated users
+    authJwt.isAdmin,     // only administrators
   ],
   userCtrl.getUsers,
 )
 
-// Obtener un usuario específico (solo administradores)
+// Get a specific user (admin only)
 router.get("/:userId", [authJwt.verifyToken, authJwt.isAdmin], userCtrl.getUserById)
 
-// Actualizar un usuario (solo administradores)
+// Update a user (admin only)
 router.put("/:userId", [authJwt.verifyToken, authJwt.isAdmin], userCtrl.updateUser)
 
-// Eliminar un usuario (solo administradores)
+// Delete a user (admin only)
 router.delete("/:userId", [authJwt.verifyToken, authJwt.isAdmin], userCtrl.deleteUser)
 
-// Cambiar el rol de un usuario (solo administradores)
+// Change a user's role (admin only)
 router.patch("/:userId/role", [authJwt.verifyToken, authJwt.isAdmin], userCtrl.changeUserRole)
 
 export default router

@@ -27,7 +27,7 @@ export const signUp = async (req, res) => {
   console.log(savedUser);
 
   const token = jwt.sign({ id: savedUser._id }, config.SECRET, {
-    expiresIn: 86400, // 24 horas
+    expiresIn: 86400, // 24 hours
   });
 
   res.status(200).json({ token });
@@ -57,13 +57,13 @@ export const signIn = async (req, res) => {
 
 export const verifyToken = async (req, res) => {
   try {
-    // 1) Intentar leer token de body
+    // 1) Try to read token from body
     let token = req.body.token;
-    // 2) Si no está en body, buscar en x-access-token header
+    // 2) If not in body, check x-access-token header
     if (!token && req.headers["x-access-token"]) {
       token = req.headers["x-access-token"];
     }
-    // 3) Si no, buscar en Authorization: Bearer <token>
+    // 3) Otherwise, check Authorization: Bearer <token>
     if (!token && req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
       token = req.headers.authorization.split(" ")[1];
     }
@@ -72,10 +72,10 @@ export const verifyToken = async (req, res) => {
       return res.status(403).json({ message: "No token provided", isValid: false });
     }
 
-    // Verificamos el token
+    // Verify token
     const decoded = jwt.verify(token, config.SECRET);
 
-    // Buscamos al usuario
+    // Find user
     const user = await User.findById(decoded.id).populate("roles");
     if (!user) {
       return res.status(404).json({ message: "User not found", isValid: false });
