@@ -1,6 +1,7 @@
 const express = require("express")
 const router = express.Router()
-const User = require("../models/User")
+const UserModule = require('../models/User');
+const User = UserModule.default || UserModule;
 const Role = require("../models/Role")
 const { verifyToken, isAdmin } = require("../middlewares/authJWT")
 
@@ -43,27 +44,32 @@ router.get("/users", [verifyToken, isAdmin], async (req, res) => {
 
 // Get specific user (admin only)
 router.get("/users/:id", [verifyToken, isAdmin], async (req, res) => {
+  const { id } = req.params;
+  console.log("getUserById called with userId:", id);
   try {
-    const user = await User.findById(req.params.id, { password: 0 }).populate("roles")
+    console.log("User:", User);
+    console.log("typeof User.findById:", typeof User.findById);
+    const user = await User.findById(id, { password: 0 }).populate("roles");
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" })
+      return res.status(404).json({ message: "User not found" });
     }
 
-    // Transform data for client
     const transformedUser = {
       id: user._id,
       username: user.username,
       email: user.email,
       roles: user.roles.map((role) => role.name),
       createdAt: user.createdAt,
-    }
+    };
 
-    res.json(transformedUser)
+    res.json(transformedUser);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching user" })
+    console.error("Error fetching user:", error);
+    res.status(500).json({ message: "Error fetching user" });
   }
-})
+});
+
 
 // Update user (admin only)
 router.put("/users/:id", [verifyToken, isAdmin], async (req, res) => {
